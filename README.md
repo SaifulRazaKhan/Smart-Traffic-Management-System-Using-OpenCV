@@ -1,6 +1,4 @@
 <<<<<<< HEAD
-# Smart-Traffic-Management-System-Using-OpenCV
-=======
 # Smart Traffic Monitoring System Using Computer Vision
 
 **Academic Minor Project &mdash; B.Tech Computer Science and Engineering**
