@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Traffic Monitoring System | Minor Project</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Google Fonts for Clean Academic Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Academic Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <span class="badge-academic">B.Tech Minor Project</span>
+                <h1>Smart Traffic Monitoring System</h1>
+                <p class="subtitle">Computer Vision & Deep Learning Based Vehicle Detection and Density Classification</p>
+            </div>
+            <nav class="nav-links">
+                <a href="#dashboard" class="nav-link active">Dashboard</a>
+                <a href="#video-input" class="nav-link">Media Input</a>
+                <a href="#results" class="nav-link">Detection Results</a>
+                <a href="#about" class="nav-link">About Project</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+
+        <!-- SECTION 1: DASHBOARD -->
+        <section id="dashboard" class="content-section">
+            <div class="section-header">
+                <h2>Traffic Monitoring Dashboard</h2>
+                <span class="section-tag">System Overview</span>
+            </div>
+
+            <!-- System Status Strip -->
+            <div class="status-strip">
+                <div class="status-item">
+                    <span class="status-dot online"></span>
+                    <span class="status-label">Model:</span>
+                    <strong id="active-model-display">YOLO26n (Fallback: YOLO11n)</strong>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Inference Engine:</span>
+                    <span>PyTorch & Ultralytics (CPU / GPU)</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Counting Method:</span>
+                    <span>Temporal Tracking + Virtual Line</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Current Density:</span>
+                    <span id="quick-density-badge" class="badge-density density-neutral">Awaiting Analysis</span>
+                </div>
+            </div>
+
+            <!-- Real-time Statistic Cards -->
+            <div class="stats-grid">
+                <!-- Total Vehicles Card -->
+                <div class="card stat-card primary-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Cumulative Vehicles</span>
+                        <span class="stat-icon">&#128663;</span>
+                    </div>
+                    <div class="stat-value" id="card-total-vehicles">0</div>
+                    <p class="stat-subtext">Total unique vehicles counted</p>
+                </div>
+
+                <!-- Active in Monitored Area Card -->
+                <div class="card stat-card active-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Active in Road Zone</span>
+                        <span class="stat-icon">&#128664;</span>
+                    </div>
+                    <div class="stat-value" id="card-active-vehicles">0</div>
+                    <p class="stat-subtext">Vehicles currently visible in region</p>
+                </div>
+
+                <!-- Cars Card -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Cars</span>
+                        <span class="category-pill pill-car">Class 2</span>
+                    </div>
+                    <div class="stat-value" id="card-cars">0</div>
+                    <p class="stat-subtext">Light passenger vehicles</p>
+                </div>
+
+                <!-- Motorcycles Card -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Motorcycles</span>
+                        <span class="category-pill pill-motorcycle">Class 3</span>
+                    </div>
+                    <div class="stat-value" id="card-motorcycles">0</div>
+                    <p class="stat-subtext">Two-wheelers & scooters</p>
+                </div>
+
+                <!-- Buses Card -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Buses</span>
+                        <span class="category-pill pill-bus">Class 5</span>
+                    </div>
+                    <div class="stat-value" id="card-buses">0</div>
+                    <p class="stat-subtext">Heavy public transit</p>
+                </div>
+
+                <!-- Trucks Card -->
+                <div class="card stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Trucks</span>
+                        <span class="category-pill pill-truck">Class 7</span>
+                    </div>
+                    <div class="stat-value" id="card-trucks">0</div>
+                    <p class="stat-subtext">Heavy commercial transport</p>
+                </div>
+
+                <!-- Traffic Density Classification Card -->
+                <div class="card stat-card density-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Traffic Density</span>
+                        <span class="stat-icon">&#128202;</span>
+                    </div>
+                    <div class="density-display">
+                        <span id="card-density-badge" class="badge-density-large density-neutral">PENDING</span>
+                    </div>
+                    <p class="stat-subtext" id="card-density-explanation">Updates live based on active road load</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: MEDIA INPUT -->
+        <section id="video-input" class="content-section">
+            <div class="section-header">
+                <h2>Media Input & Previews</h2>
+                <span class="section-tag">Input Stage</span>
+            </div>
+
+            <div class="grid-two-columns">
+                <!-- Upload & Configuration Card -->
+                <div class="card">
+                    <h3 class="card-title">1. Upload Traffic Video or Image</h3>
+                    <p class="card-desc">Select an MP4/AVI video recording or a JPG/PNG traffic photograph for computer vision analysis.</p>
+
+                    <!-- Drag & Drop Upload Zone -->
+                    <div id="drop-zone" class="drop-zone">
+                        <input type="file" id="video-file-input" accept=".mp4,.avi,.mov,.mkv,.jpg,.jpeg,.png" hidden>
+                        <div class="drop-zone-content">
+                            <div class="upload-icon">&#128249;</div>
+                            <p><strong>Click to browse</strong> or drag & drop media here</p>
+                            <span class="file-hint">Supported formats: MP4, AVI, MOV, JPG, PNG (Max 100MB)</span>
+                        </div>
+                    </div>
+
+                    <!-- Bundled Sample Media for Fast Testing -->
+                    <div class="sample-videos-box">
+                        <label class="input-label">Or test with bundled sample media:</label>
+                        <div style="margin-bottom: 0.6rem;">
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sample Videos:</span>
+                            <div class="sample-buttons-row" id="sample-videos-container" style="margin-top: 0.25rem;">
+                                <span class="loading-hint">Loading video samples...</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sample Images (All 4 COCO Classes):</span>
+                            <div class="sample-buttons-row" id="sample-images-container" style="margin-top: 0.25rem;">
+                                <span class="loading-hint">Loading image samples...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configurable Thresholds -->
+                    <div class="thresholds-box">
+                        <label class="input-label">Traffic Density Thresholds (Active Vehicles in Road Region):</label>
+                        <div class="threshold-inputs">
+                            <div class="threshold-field">
+                                <span class="threshold-label">Low Density Limit (&le;):</span>
+                                <input type="number" id="input-low-threshold" value="{{ default_low }}" min="1" max="20">
+                                <small>Active &le; value is Low</small>
+                            </div>
+                            <div class="threshold-field">
+                                <span class="threshold-label">Medium Density Limit (&le;):</span>
+                                <input type="number" id="input-med-threshold" value="{{ default_med }}" min="2" max="50">
+                                <small>Active between Low & Med is Medium</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Trigger Button -->
+                    <div class="action-row">
+                        <button id="btn-start-analysis" class="btn btn-primary" disabled>
+                            <span>&#9654;</span> Start Traffic Analysis
+                        </button>
+                        <button id="btn-reset" class="btn btn-secondary">
+                            Reset
+                        </button>
+                    </div>
+
+                    <div id="upload-error-box" class="alert-box alert-error" style="display: none;"></div>
+                </div>
+
+                <!-- Media Preview Card -->
+                <div class="card">
+                    <h3 class="card-title">2. Media Preview</h3>
+                    <p class="card-desc">Inspect input resolution, duration, and frame rate before starting analysis.</p>
+
+                    <div class="video-preview-wrapper">
+                        <video id="preview-player" controls preload="metadata" class="video-player" style="display: none;">
+                            <p>Your browser does not support the video tag.</p>
+                        </video>
+                        <img id="preview-image" class="media-image" style="display: none;" alt="Selected Input Preview">
+                        <div id="preview-placeholder" class="preview-placeholder">
+                            <p>No media selected. Upload a file or pick a bundled sample above to preview.</p>
+                        </div>
+                    </div>
+
+                    <!-- Media Metadata Table -->
+                    <div class="metadata-table-container">
+                        <table class="metadata-table">
+                            <tbody>
+                                <tr>
+                                    <td>File Name:</td>
+                                    <td id="meta-filename">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Media Type:</td>
+                                    <td id="meta-type">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Resolution:</td>
+                                    <td id="meta-resolution">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Frame Rate:</td>
+                                    <td id="meta-fps">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Duration:</td>
+                                    <td id="meta-duration">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Frames:</td>
+                                    <td id="meta-frames">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: DETECTION RESULTS -->
+        <section id="results" class="content-section">
+            <div class="section-header">
+                <h2>Detection & Classification Results</h2>
+                <span class="section-tag">Output Stage</span>
+            </div>
+
+            <!-- Live Progress Card -->
+            <div id="analysis-progress-card" class="card progress-card" style="display: none;">
+                <div class="progress-header">
+                    <div>
+                        <h4 id="progress-status-title">Processing Traffic Video...</h4>
+                        <p id="progress-subtext" class="progress-subtext">Executing YOLO vehicle detection and temporal tracking...</p>
+                    </div>
+                    <span id="progress-percentage-label" class="progress-badge">0%</span>
+                </div>
+                <div class="progress-bar-track">
+                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-stats-row">
+                    <span>Frame: <strong id="progress-frame-counter">0 / 0</strong></span>
+                    <span>Speed: <strong id="progress-fps-counter">0.0 FPS</strong></span>
+                    <span>Elapsed: <strong id="progress-time-counter">0.0s</strong></span>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="analysis-error-box" class="alert-box alert-error" style="display: none;"></div>
+
+            <!-- Results View Area -->
+            <div id="results-display-area" style="display: none;">
+
+                <!-- Big Density Classification Outcome Banner -->
+                <div id="density-banner" class="density-banner banner-low">
+                    <div class="density-banner-content">
+                        <div class="density-banner-text">
+                            <span class="banner-label">CLASSIFIED TRAFFIC DENSITY</span>
+                            <h3 id="banner-density-title">Low Traffic</h3>
+                            <p id="banner-density-description">Traffic flow is clear with free-moving vehicles.</p>
+                        </div>
+                        <div class="density-banner-code" id="banner-density-code">LOW</div>
+                    </div>
+                </div>
+
+                <!-- Video Display Grid -->
+                <div class="grid-two-columns">
+                    <!-- Processed Output Media -->
+                    <div class="card">
+                        <div class="card-title-row">
+                            <h3 class="card-title" id="processed-card-title">Processed Media with Bounding Boxes</h3>
+                            <a id="btn-download-video" class="btn btn-sm btn-outline" download="annotated_traffic.mp4" href="#">
+                                &#128190; Download Result
+                            </a>
+                        </div>
+                        <p class="card-desc" id="processed-card-desc">Vehicle bounding boxes, category labels, confidence scores, and monitored road zone.</p>
+                        <div class="video-preview-wrapper">
+                            <video id="processed-player" controls preload="metadata" class="video-player" style="display: none;">
+                                <p>Your browser does not support the video tag.</p>
+                            </video>
+                            <img id="processed-image" class="media-image" style="display: none;" alt="Processed Annotated Image">
+                        </div>
+                    </div>
+
+                    <!-- Detailed Performance & Counts Summary -->
+                    <div class="card">
+                        <h3 class="card-title">Analysis Metrics & Verification</h3>
+                        <p class="card-desc">Actual measured values from computer vision processing (no simulated data).</p>
+
+                        <div class="metrics-summary-table">
+                            <table class="table-clean">
+                                <thead>
+                                    <tr>
+                                        <th>Metric / Parameter</th>
+                                        <th>Measured Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Cumulative Unique Vehicles:</td>
+                                        <td><strong id="res-total-vehicles">0</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cars Count:</td>
+                                        <td id="res-cars">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Motorcycles Count:</td>
+                                        <td id="res-motorcycles">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Buses Count:</td>
+                                        <td id="res-buses">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Trucks Count:</td>
+                                        <td id="res-trucks">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Average Active Vehicles:</td>
+                                        <td><strong id="res-avg-active">0.0</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Peak Simultaneous Vehicles:</td>
+                                        <td id="res-peak">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Traffic Density Level:</td>
+                                        <td><span id="res-density-badge" class="badge-density density-low">Low</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Detection Model:</td>
+                                        <td id="res-model">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Frames Processed:</td>
+                                        <td id="res-frames">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Processing Time:</td>
+                                        <td id="res-time">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Actual Processing Speed:</td>
+                                        <td id="res-fps">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: ABOUT PROJECT -->
+        <section id="about" class="content-section">
+            <div class="section-header">
+                <h2>About the Project</h2>
+                <span class="section-tag">Academic Minor Project Documentation</span>
+            </div>
+
+            <div class="card about-card">
+                <div class="about-grid">
+                    <div class="about-col">
+                        <h3>1. Project Objective</h3>
+                        <p>
+                            The objective of this Minor Project is to design and implement an automated 
+                            <strong>Smart Traffic Monitoring System</strong> using Computer Vision and Deep Learning.
+                            The system automates the detection, classification, counting, and density estimation
+                            of vehicular traffic from recorded surveillance or drone footage without human intervention.
+                        </p>
+                        <div class="pipeline-visual">
+                            <span class="pipeline-step">Traffic Video</span>
+                            <span class="pipeline-arrow">&rarr;</span>
+                            <span class="pipeline-step">YOLO Vehicle Detection</span>
+                            <span class="pipeline-arrow">&rarr;</span>
+                            <span class="pipeline-step">Temporal Tracking & Counting</span>
+                            <span class="pipeline-arrow">&rarr;</span>
+                            <span class="pipeline-step">Rule-Based Density</span>
+                            <span class="pipeline-arrow">&rarr;</span>
+                            <span class="pipeline-step">Academic Dashboard</span>
+                        </div>
+                    </div>
+
+                    <div class="about-col">
+                        <h3>2. Technology Stack</h3>
+                        <ul class="tech-list">
+                            <li><strong>Programming Language:</strong> Python 3.13</li>
+                            <li><strong>Object Detection:</strong> YOLO26n / YOLO11n (Pretrained on COCO dataset)</li>
+                            <li><strong>Computer Vision:</strong> OpenCV (Video frame decoding, drawing, video writing)</li>
+                            <li><strong>Deep Learning:</strong> PyTorch & Ultralytics</li>
+                            <li><strong>Backend:</strong> Flask (REST API, background worker threads)</li>
+                            <li><strong>Frontend:</strong> Semantic HTML5, CSS3, JavaScript (Fetch API)</li>
+                        </ul>
+                    </div>
+
+                    <div class="about-col">
+                        <h3>3. Key Methodology for Viva / Evaluation</h3>
+                        <div class="methodology-card">
+                            <h4>How Duplicate Counting is Prevented:</h4>
+                            <p>
+                                Rather than simply counting detected bounding boxes in each isolated frame (which would repeatedly count the same vehicle 30 times every second),
+                                this system employs <strong>ByteTrack temporal tracking</strong>. Each detected vehicle is assigned a persistent unique track ID across frames.
+                                A vehicle is registered only once upon crossing the reference virtual line or first entering the monitoring zone.
+                            </p>
+                        </div>
+                        <div class="methodology-card">
+                            <h4>Why Rule-Based Density Classification:</h4>
+                            <p>
+                                In accordance with the approved B.Tech Minor Project scope, traffic density (Low, Medium, High)
+                                is derived through a calibrated rule-based threshold function based on the total vehicle volume and active load.
+                                This provides a transparent, explainable, and configurable decision-making mechanism suitable for academic demonstration.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="about-col">
+                        <h3>4. Minor Project Scope Boundaries</h3>
+                        <p class="scope-note">
+                            In accordance with Minor Project guidelines, complex enterprise extensions (such as adaptive traffic light signaling,
+                            accident prediction, ANPR number plate recognition, multi-camera re-identification, or heavy database backends)
+                            are reserved for future Major Project iterations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Academic Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>Smart Traffic Monitoring System &bull; B.Tech Computer Science Minor Project</p>
+            <p class="footer-subtext">Built with Python, OpenCV, YOLO, and Flask</p>
+        </div>
+    </footer>
+
+    <!-- Main JavaScript Application Logic -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

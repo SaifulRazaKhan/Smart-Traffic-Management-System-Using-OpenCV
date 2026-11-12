@@ -1,0 +1,29 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment and settings
+.env
+venv/
+env/
+.venv/
+
+# Large model weight files (tracked locally, gitignore if needed, or included)
+# yolo*.pt
+
+# Uploads & Outputs (keep directory structure with .gitkeep)
+static/uploads/*
+!static/uploads/.gitkeep
+static/outputs/*
+!static/outputs/.gitkeep
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# External Large Datasets
+trafficmanagementdataset/
+
