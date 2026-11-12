@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Smart Traffic Monitoring System Using Computer Vision
 
 **Academic Minor Project &mdash; B.Tech Computer Science and Engineering**
@@ -206,4 +205,3 @@ http://127.0.0.1:5000
 
 ## 10. License & Academic Attribution
 Developed as an academic Minor Project for B.Tech Computer Science and Engineering. Built with open-source tools: Ultralytics, PyTorch, OpenCV, and Flask.
->>>>>>> 6aa808d (commit project)
